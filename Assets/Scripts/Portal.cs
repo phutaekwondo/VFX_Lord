@@ -3,12 +3,11 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using RenderPipelineManager = UnityEngine.Rendering.RenderPipelineManager;
 
-[ExecuteInEditMode]
+// [ExecuteInEditMode]
 public class Portal : MonoBehaviour
 {
     [SerializeField] private Portal m_connectedPortal;
     [SerializeField] private Camera m_camera; //the camera that will render the portal view for the connected portal
-    [SerializeField] private Camera m_playerCamera; //the camera that will render the player view for the connected portal
     [SerializeField] private Material m_portalMat;
     [SerializeField] private GameObject m_plane;
     float currentResolutionWidth;
@@ -70,7 +69,7 @@ public class Portal : MonoBehaviour
     {
         //distance from camera to plane
         float distance = Vector3.Distance(m_plane.transform.position, m_camera.transform.position);
-        m_camera.nearClipPlane = distance;
+        m_camera.nearClipPlane = distance-0.3f;
     }
 
     private void UpdateCameraPosition( Camera playerCamera )
