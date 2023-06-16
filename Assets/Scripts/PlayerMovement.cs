@@ -26,6 +26,9 @@ public class PlayerMovement : MonoBehaviour
     private float m_fallVelocity=0;
     private PlayerMovementState m_playerMovementState = PlayerMovementState.Idle;
 
+    //teleport through portals
+    private bool m_teleportable = true;
+
     //references
     private CharacterController m_charactorController;
     [SerializeField] private Transform m_cameraTransform;
@@ -36,11 +39,20 @@ public class PlayerMovement : MonoBehaviour
         return m_playerMovementState;
     }
 
+    public void Teleport(Vector3 position, Vector3 rotation)
+    {
+        this.transform.position = position;
+        this.transform.eulerAngles = rotation;
+    }
+
     //PRIVATE METHOD
     private void Start() 
     {
         m_isGrounded = true;
         m_charactorController = GetComponent<CharacterController>();
+
+        //hide cursor
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void Update() 
@@ -180,5 +192,47 @@ public class PlayerMovement : MonoBehaviour
         m_moveSpeed = moveDirection * m_runSpeed;
 
         m_playerMovementState = PlayerMovementState.Running;
+    }
+
+    //Teleport through the portal
+    private void OnTriggerEnter(Collider other) 
+    {
+
+        if (m_teleportable && (other.tag == "PortalHole" || other.tag == "Portal"))
+        {
+            Debug.Log("Teleport from " + this.transform.position);
+
+            m_teleportable = false;
+
+            CharacterController cc = GetComponent<CharacterController>();
+            cc.enabled = false;
+
+            Debug.Log("Teleport from " + this.transform.position);
+
+            Debug.Log("Teleport");
+            //get the parent object of other
+            GameObject portalGO = other.gameObject;
+            Portal portal = portalGO.GetComponent<Portal>();
+            portal.SetEnableHole(false);
+            Vector3 telePos = portal.GetTeleportPosition(this.transform.position);
+            Vector3 teleForw = portal.GetTeleportForward(this.transform.forward);
+
+            Debug.Log("Teleport to " + telePos + " with forward " + teleForw);
+
+            //teleport the player
+            this.transform.position = telePos;
+            this.transform.forward = teleForw;
+
+            cc.enabled = true;
+        }
+    }
+    private void OnTriggerExit(Collider other) 
+    {
+        if (other.tag == "PortalHole" || other.tag == "Portal")
+        {
+            m_teleportable = true;
+            Portal portal = other.gameObject.GetComponent<Portal>();
+            portal.SetEnableHole(true);
+        }
     }
 }
