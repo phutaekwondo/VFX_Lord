@@ -26,11 +26,6 @@ public class PlayerMovement : MonoBehaviour
     private float m_fallVelocity=0;
     private PlayerMovementState m_playerMovementState = PlayerMovementState.Idle;
 
-    //teleport through portals
-    private bool m_teleportable = true;
-
-    //references
-    // private CharacterController m_charactorController;
     [SerializeField] private Transform m_cameraTransform;
 
     //PUBLIC METHOD
