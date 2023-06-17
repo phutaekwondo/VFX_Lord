@@ -8,6 +8,7 @@ TagManager:
   - PortalCamera
   - Portal
   - PortalHole
+  - PortalHoleMask
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,7 @@ TagManager:
   - UI
   - PortalGate
   - PortalHole
-  - 
+  - PortalHoleMask
   - 
   - 
   - 

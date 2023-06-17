@@ -30,7 +30,7 @@ public class PlayerMovement : MonoBehaviour
     private bool m_teleportable = true;
 
     //references
-    private CharacterController m_charactorController;
+    // private CharacterController m_charactorController;
     [SerializeField] private Transform m_cameraTransform;
 
     //PUBLIC METHOD
@@ -49,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
     private void Start() 
     {
         m_isGrounded = true;
-        m_charactorController = GetComponent<CharacterController>();
+        // m_charactorController = GetComponent<CharacterController>();
 
         //hide cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -62,6 +62,14 @@ public class PlayerMovement : MonoBehaviour
         ApplyMovement();
     }
 
+    private void OnCollisionEnter(Collision other) 
+    {
+        if(other.gameObject.tag == "Ground")
+        {
+            m_isGrounded = true;
+        }
+    }
+
     private void OnControllerColliderHit(ControllerColliderHit hit) 
     {
         if (hit.collider.CompareTag("Ground"))
@@ -72,14 +80,16 @@ public class PlayerMovement : MonoBehaviour
     private void ApplyMovement()
     {
         // move the player
-        m_charactorController.Move(m_moveSpeed * Time.deltaTime);
+        // m_charactorController.Move(m_moveSpeed * Time.deltaTime);
+        transform.position = transform.position + m_moveSpeed * Time.deltaTime;
     }
     private void ApplyGravity()
     {
         if (!m_isGrounded)
         {
             m_fallVelocity += m_gravity * Time.deltaTime;
-            m_charactorController.Move(Vector3.down * m_fallVelocity * Time.deltaTime);
+            // m_charactorController.Move(Vector3.down * m_fallVelocity * Time.deltaTime);
+            transform.position = transform.position + Vector3.down * m_fallVelocity * Time.deltaTime;
         }
         else
         {
@@ -168,8 +178,8 @@ public class PlayerMovement : MonoBehaviour
     private void FreeThrow()
     {
         // update the move speed
-        m_moveSpeed.x = m_charactorController.velocity.x;
-        m_moveSpeed.z = m_charactorController.velocity.z;
+        // m_moveSpeed.x = m_charactorController.velocity.x;
+        // m_moveSpeed.z = m_charactorController.velocity.z;
 
         m_playerMovementState = PlayerMovementState.FreeThrowing;
     }
@@ -195,44 +205,40 @@ public class PlayerMovement : MonoBehaviour
     }
 
     //Teleport through the portal
-    private void OnTriggerEnter(Collider other) 
-    {
+    // private void OnTriggerEnter(Collider other) 
+    // {
 
-        if (m_teleportable && (other.tag == "PortalHole" || other.tag == "Portal"))
-        {
-            Debug.Log("Teleport from " + this.transform.position);
+    //     if (m_teleportable && (other.tag == "PortalHole" || other.tag == "Portal"))
+    //     {
+    //         m_teleportable = false;
+    //         //get the parent object of other
+    //         GameObject portalGO = other.gameObject;
+    //         Portal portal = portalGO.GetComponent<Portal>();
+    //         portal.SetEnableHole(false);
+    //         Vector3 telePos = portal.GetTeleportPosition(this.transform.position);
+    //         Vector3 teleForw = portal.GetTeleportForward(this.transform.forward);
 
-            m_teleportable = false;
-
-            CharacterController cc = GetComponent<CharacterController>();
-            cc.enabled = false;
-
-            Debug.Log("Teleport from " + this.transform.position);
-
-            Debug.Log("Teleport");
-            //get the parent object of other
-            GameObject portalGO = other.gameObject;
-            Portal portal = portalGO.GetComponent<Portal>();
-            portal.SetEnableHole(false);
-            Vector3 telePos = portal.GetTeleportPosition(this.transform.position);
-            Vector3 teleForw = portal.GetTeleportForward(this.transform.forward);
-
-            Debug.Log("Teleport to " + telePos + " with forward " + teleForw);
-
-            //teleport the player
-            this.transform.position = telePos;
-            this.transform.forward = teleForw;
-
-            cc.enabled = true;
-        }
-    }
-    private void OnTriggerExit(Collider other) 
-    {
-        if (other.tag == "PortalHole" || other.tag == "Portal")
-        {
-            m_teleportable = true;
-            Portal portal = other.gameObject.GetComponent<Portal>();
-            portal.SetEnableHole(true);
-        }
-    }
+    //         //teleport the player
+    //         this.transform.position = telePos;
+    //         this.transform.forward = teleForw;
+    //     }
+    // }
+    // private void OnTriggerStay(Collider other) 
+    // {
+    //     if (other.tag == "PortalHole" || other.tag == "Portal")
+    //     {
+    //         m_teleportable = false;
+    //         Portal portal = other.gameObject.GetComponent<Portal>();
+    //         portal.SetEnableHole(true);
+    //     }
+    // }
+    // private void OnTriggerExit(Collider other) 
+    // {
+    //     if (other.tag == "PortalHole" || other.tag == "Portal")
+    //     {
+    //         m_teleportable = true;
+    //         Portal portal = other.gameObject.GetComponent<Portal>();
+    //         portal.SetEnableHole(true);
+    //     }
+    // }
 }

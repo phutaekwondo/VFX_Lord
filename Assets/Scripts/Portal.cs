@@ -10,6 +10,7 @@ public class Portal : MonoBehaviour
     [SerializeField] GameObject m_portalHole;
     [SerializeField] float nearClipOffset = 0.05f;
     // Collider m_collider;
+    bool m_ableToTeleport = true;
     float nearClipLimit = 0.2f;
     float m_screenZOffset = 0.16f;
     float m_currentResolutionWidth;
@@ -55,7 +56,32 @@ public class Portal : MonoBehaviour
     }
 
     //Teleport
-    public void SetEnableHole(bool enable)
+    private void OnTriggerEnter(Collider other) 
+    {
+        if (other.tag == "Player" && m_ableToTeleport)
+        {
+            //set up destination portal
+            m_pairPortal.m_ableToTeleport = false;
+            m_pairPortal.SetEnableHoleScreen(false);
+
+            //tele the player to there
+            Vector3 telePos = GetTeleportPosition(other.transform.position);
+            Vector3 teleForw = GetTeleportForward(other.transform.forward);
+            other.transform.position = telePos;
+            other.transform.forward = teleForw;
+        }
+    }
+    private void OnTriggerExit(Collider other) 
+    {
+        if (other.tag == "Player" && !m_ableToTeleport)
+        {
+            m_ableToTeleport = true;
+            m_pairPortal.m_ableToTeleport = true;
+            m_pairPortal.SetEnableHoleScreen(true);
+        }
+    }
+
+    public void SetEnableHoleScreen(bool enable)
     {
         //if player enter hole, the hole should be disable til player exit the collision 
         m_portalHole.SetActive(enable);
@@ -69,19 +95,19 @@ public class Portal : MonoBehaviour
 
     public Vector3 GetTeleportPosition(Vector3 position)
     {
-        Transform pairPortalTrans = m_pairPortal.transform;
-        Vector2 A = new Vector2(pairPortalTrans.position.x, pairPortalTrans.position.z);
+        Transform thisTrans = this.transform;
+        Vector2 A = new Vector2(thisTrans.position.x, thisTrans.position.z);
         Vector2 C = new Vector2(position.x, position.z);
-        Vector2 F = new Vector2(pairPortalTrans.forward.x, pairPortalTrans.forward.z);
+        Vector2 F = new Vector2(thisTrans.forward.x, thisTrans.forward.z);
         F.Normalize();
 
-        Vector2 thisPos2D = new Vector2(transform.position.x, transform.position.z);
-        Vector2 thisForw2D = new Vector2(transform.forward.x, transform.forward.z);
-        thisForw2D.Normalize();
+        Vector2 pairPos2D = new Vector2(m_pairPortal.transform.position.x,m_pairPortal.transform.position.z);
+        Vector2 pairForw2D = new Vector2(m_pairPortal.transform.forward.x,m_pairPortal.transform.forward.z);
+        pairForw2D.Normalize();
 
         float angle = Vector2.SignedAngle(F, C-A);
-        Vector2 dir = Quaternion.Euler(0, 0, angle) * - thisForw2D;
-        Vector2 relativePos = thisPos2D + (dir * Vector2.Distance(A, C));
+        Vector2 dir = Quaternion.Euler(0, 0, angle) * pairForw2D;
+        Vector2 relativePos = pairPos2D + (dir * Vector2.Distance(A, C));
 
         return new Vector3(relativePos.x, position.y, relativePos.y);
     }
@@ -136,6 +162,8 @@ public class Portal : MonoBehaviour
 
     private void UpdateCameraClipPlane(Camera viewCamera)
     {
+        // m_lookThroughCamera.projectionMatrix = viewCamera.projectionMatrix;
+        // return;
         Transform clipPlane = transform;
         int dot = System.Math.Sign(Vector3.Dot(clipPlane.forward, transform.position - m_lookThroughCamera.transform.position));
 
@@ -163,7 +191,7 @@ public class Portal : MonoBehaviour
         {
             m_lookThroughCamera.targetTexture.Release();
         }
-        m_lookThroughCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, 24);
+        m_lookThroughCamera.targetTexture = new RenderTexture(Screen.width, Screen.height, 32);
     }
 
     private void SetupTextureAndMaterial()
