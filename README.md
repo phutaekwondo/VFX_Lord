@@ -1,5 +1,7 @@
 ![preview](./preview.png "preview")
 
+demo: https://youtu.be/HCGWXQIJSbM
+
 # Requirements
 
 - Unity Editor 2021.3.15f1
