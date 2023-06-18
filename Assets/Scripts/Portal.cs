@@ -9,23 +9,41 @@ public class Portal : MonoBehaviour
     [SerializeField] Camera m_lookThroughCamera;
     [SerializeField] GameObject m_portalHole;
     [SerializeField] float nearClipOffset = 0.05f;
+    private Material m_portalHoleMaterial;
     // Collider m_collider;
     bool m_ableToTeleport = true;
     float nearClipLimit = 0.2f;
-    float m_screenZOffset = 0.16f;
+    [SerializeField] float m_screenZOffset = 0.16f;
     float m_currentResolutionWidth;
     float m_currentResolutionHeight;
     Camera m_playerCam;
 
-    private void Start() 
+    private void Awake() 
     {
         m_playerCam = Camera.main;
+
+        m_portalHoleMaterial = m_portalHole.GetComponent<MeshRenderer>().material;
+    }
+
+    private void Start() 
+    {
         if (m_pairPortal != null)
         {
-            m_pairPortal.m_pairPortal = this;
+            m_pairPortal.SetupPairPortal(this);
+            SetupTextureAndMaterial();
         }
-        // m_collider = GetComponent<Collider>();
 
+        // m_collider = GetComponent<Collider>();
+    }
+
+    private void SetupPairPortal(Portal pairPortal)
+    {
+        if (m_pairPortal != null)
+        {
+            return;
+        }
+
+        m_pairPortal = pairPortal;
         SetupTextureAndMaterial();
     }
 
@@ -65,10 +83,13 @@ public class Portal : MonoBehaviour
             m_pairPortal.SetEnableHoleScreen(false);
 
             //tele the player to there
-            Vector3 telePos = GetTeleportPosition(other.transform.position);
-            Vector3 teleForw = GetTeleportForward(other.transform.forward);
-            other.transform.position = telePos;
-            other.transform.forward = teleForw;
+            //old method (not working so fine)
+            // Vector3 telePos = GetTeleportPosition(other.transform.position);
+            // Vector3 teleForw = GetTeleportForward(other.transform.forward);
+            // other.transform.position = telePos;
+            // other.transform.forward = teleForw;
+            Matrix4x4 this2Pair = This2PairRelative(other.transform);
+            other.transform.SetPositionAndRotation(this2Pair.GetColumn(3), this2Pair.rotation);
         }
     }
     private void OnTriggerExit(Collider other) 
@@ -125,9 +146,14 @@ public class Portal : MonoBehaviour
         return new Vector3(dir.x, forward.y, dir.y);
     }
 
-    public Matrix4x4 PairPortalRelavetiveMatrix(Transform from)
+    public Matrix4x4 Pair2ThisRelative(Transform from)
     {
         return this.transform.localToWorldMatrix * m_pairPortal.transform.worldToLocalMatrix * from.localToWorldMatrix;
+    }
+
+    public Matrix4x4 This2PairRelative(Transform from)
+    {
+        return m_pairPortal.transform.localToWorldMatrix * this.transform.worldToLocalMatrix * from.localToWorldMatrix;
     }
 
 
@@ -151,7 +177,7 @@ public class Portal : MonoBehaviour
 
     private void UpdateCameraTransform()
     {
-        Matrix4x4 relative = PairPortalRelavetiveMatrix(m_playerCam.transform);
+        Matrix4x4 relative = Pair2ThisRelative(m_playerCam.transform);
 
         //update the camera position and rotation
         m_lookThroughCamera.transform.SetPositionAndRotation(relative.GetColumn(3), relative.rotation);
@@ -197,22 +223,29 @@ public class Portal : MonoBehaviour
     private void SetupTextureAndMaterial()
     {
         SetupTextureSize();
+
+        m_pairPortal.m_portalHoleMaterial.SetTexture("_PortalTexture", m_lookThroughCamera.targetTexture);
+
+        //old method ==================
+        //problem: IDK why creat a new Material will cause the portal hole screen to be black in BUILD
+        //solution: create one material for each portal in Editor, I don't like this solution because it's not flexible
+
         //generate material and render it to the pair portal
 
         //generate material that contain render texture from this portal camera
-        Material material = new Material(Shader.Find("Shader Graphs/PortalShaderGraph"));
+        // Material material = new Material(Shader.Find("Shader Graphs/PortalShaderGraph"));
 
-        if (material == null)
-        {
-            Debug.LogError("Portal material is null");
-            return;
-        }
+        // if (material == null)
+        // {
+        //     Debug.LogError("Portal material is null");
+        //     return;
+        // }
 
         //set the render texture to the material
-        material.SetTexture("_PortalTexture", m_lookThroughCamera.targetTexture);
+        // material.SetTexture("_PortalTexture", m_lookThroughCamera.targetTexture);
 
-        //set material to the pair portal
-        m_pairPortal.SetTheMaterialForHoleView(material);
+        // //set material to the pair portal
+        // m_pairPortal.SetTheMaterialForHoleView(material);
     }
 
     private void SetTheMaterialForHoleView(Material material)
