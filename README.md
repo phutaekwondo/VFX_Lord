@@ -1,3 +1,7 @@
+# Overview 
+
+A project for learning to create VFX in Unity.
+
 ![preview](./preview.png "preview")
 
 demo: https://youtu.be/HCGWXQIJSbM
